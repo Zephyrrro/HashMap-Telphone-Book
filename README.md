@@ -9,3 +9,16 @@
 - 提高要求：
   - 将电话号码薄以文件形式保存到盘上，实现数据的备份和加载。能够按用户名和电话号码两种形式建立哈希表并实现插入、查找、删除表中元素的功能。
   - 良好的界面设计。
+
+### Getting Start
+
+```bash
+# if you haven't install yarn
+npm install -g yarn
+
+# install dependencies
+yarn install
+
+# start
+yarn start
+```
