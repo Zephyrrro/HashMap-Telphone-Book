@@ -1,11 +1,13 @@
+import React from "react";
 import { Table } from "antd";
+import { TableItem } from "../utils/types";
 
 const columns = [
   {
     title: "User",
     dataIndex: "user",
     key: "user",
-    render: (_, item) => (
+    render: (_: any, item: TableItem) => (
       <span style={{ color: item.keyType === "user" ? "#ff4d4f" : "#000000" }}>
         {item.user}
       </span>
@@ -15,7 +17,7 @@ const columns = [
     title: "Phone",
     dataIndex: "phone",
     key: "phone",
-    render: (_, item) => (
+    render: (_: any, item: TableItem) => (
       <span style={{ color: item.keyType === "phone" ? "#ff4d4f" : "#000000" }}>
         {item.phone}
       </span>
@@ -28,7 +30,7 @@ const columns = [
   }
 ];
 
-function Book({ data }) {
+function Book({ data }: { data: Array<TableItem> }) {
   return (
     <>
       <Table

@@ -1,4 +1,4 @@
-import { Component } from "react";
+import React, { Component } from "react";
 import {
   Modal,
   Select,
@@ -11,11 +11,17 @@ import {
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import HashMapContext from "../store/context";
+import {
+  ModalProps,
+  KeyType,
+  SearchModalState,
+  TableItem
+} from "../utils/types";
 
 const { Option } = Select;
 
-class SearchModal extends Component {
-  constructor(props) {
+class SearchModal extends Component<ModalProps, SearchModalState> {
+  constructor(props: ModalProps) {
     super(props);
     this.state = {
       keyType: "user",
@@ -25,8 +31,6 @@ class SearchModal extends Component {
       popVisible: false
     };
   }
-
-  static contextType = HashMapContext;
 
   reset = () => {
     this.setState({
@@ -44,14 +48,14 @@ class SearchModal extends Component {
     this.reset();
   };
 
-  handleKeyTypeChange = value => {
+  handleKeyTypeChange = (value: KeyType) => {
     this.setState({
       keyType: value,
       placeholder: value === "user" ? "请输入用户名" : "请输入电话"
     });
   };
 
-  handleSearchTextChange = e => {
+  handleSearchTextChange = (e: any) => {
     this.setState({
       searchText: e.target.value
     });
@@ -60,22 +64,19 @@ class SearchModal extends Component {
   handleSearch = () => {
     this.setState({ searchResult: [] }, () => {
       const { searchText, keyType } = this.state;
-      const res = this.context.get(keyType, searchText);
+      const res = HashMapContext.get(keyType, searchText);
       if (!res) {
         message.error("查无此项");
       } else {
-        this.setState({ searchResult: [{ key: searchText, ...res }] });
+        this.setState({ searchResult: [{ keyType, key: searchText, ...res }] });
       }
     });
   };
 
-  handleDelete = item => {
-    const { keyType } = this.state;
-    const { onClose } = this.props;
-    if (this.context.remove(keyType, item.key)) {
+  handleDelete = (item: TableItem) => {
+    if (HashMapContext.remove(item.keyType, item.key)) {
       message.success("删除成功~");
-      this.reset();
-      onClose();
+      this.handleCancel();
     } else {
       message.error("删除失败！");
     }
@@ -104,7 +105,7 @@ class SearchModal extends Component {
         title: "Action",
         dataIndex: "action",
         key: "action",
-        render: (_, item) => (
+        render: (text: any, item: TableItem) => (
           <>
             <Popconfirm
               title='确定删除此项？'

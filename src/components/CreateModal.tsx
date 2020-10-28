@@ -1,10 +1,12 @@
-import { Component } from "react";
+import React, { Component, CSSProperties } from "react";
 import { Modal, Radio, Input, Tooltip, message } from "antd";
 import TelData from "../utils/TelData";
 import HashMapContext from "../store/context";
+import { ModalProps, KeyType, CreateModalState } from "../utils/types";
+import { RadioChangeEvent } from "antd/lib/radio";
 
-class CreateModal extends Component {
-  constructor(props) {
+class CreateModal extends Component<ModalProps, CreateModalState> {
+  constructor(props: ModalProps) {
     super(props);
     this.state = {
       keyType: "user",
@@ -14,8 +16,6 @@ class CreateModal extends Component {
     };
   }
 
-  static contextType = HashMapContext;
-
   reset = () => {
     this.setState({ keyType: "user", user: "", phone: "", address: "" });
   };
@@ -23,7 +23,7 @@ class CreateModal extends Component {
   handleOk = () => {
     const { keyType, user, phone, address } = this.state;
     const newItem = new TelData({ phone, user, address });
-    this.context.put(keyType, newItem[keyType], newItem);
+    HashMapContext.put(keyType, newItem[keyType], newItem);
     message.success("添加成功~");
 
     this.handleCancel();
@@ -35,27 +35,27 @@ class CreateModal extends Component {
     onClose();
   };
 
-  handleKeyTypeChange = e => {
+  handleKeyTypeChange = (e: RadioChangeEvent) => {
     this.setState({
-      keyType: e.target.value
+      keyType: e.target.value as KeyType
     });
   };
 
-  handleUserChange = e => {
+  handleUserChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({
-      user: e.target.value
+      user: e.target.value as KeyType
     });
   };
 
-  handlePhoneChange = e => {
+  handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({
-      phone: e.target.value
+      phone: e.target.value as KeyType
     });
   };
 
-  handleAddressChange = e => {
+  handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({
-      address: e.target.value
+      address: e.target.value as KeyType
     });
   };
 
@@ -120,7 +120,11 @@ class CreateModal extends Component {
   }
 }
 
-const styles = {
+interface Style {
+  [className: string]: CSSProperties;
+}
+
+const styles: Style = {
   radioContainer: {
     display: "flex",
     alignItems: "center",

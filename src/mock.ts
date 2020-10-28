@@ -1,4 +1,6 @@
-export const mock = [
+import { TableItem } from "./utils/types";
+
+export const mock: Array<TableItem> = [
   {
     user: "Michael Robinson",
     phone: "21843246088",

@@ -1,17 +1,19 @@
-export default class HashMap {
-  size;
-  table;
-  count;
-  prime;
+import { HashItem, TelProps, KeyType, TableItem } from "./types";
 
-  constructor(minSize) {
-    this.size = minSize;
+export default class HashMap {
+  private limit: number;
+  private table: Array<HashItem | null>;
+  private count: number;
+  private prime: number;
+
+  constructor(minSize: number) {
+    this.limit = minSize;
     this.table = [];
     this.count = 0;
     this.prime = generateMaxPrime(minSize);
   }
 
-  getHash(str) {
+  getHash(str: string): number {
     let hash = 0;
     //  基数转换法将字符串转为十进制数
     for (let i = 0; i < str.length; i++) {
@@ -24,45 +26,48 @@ export default class HashMap {
   /**
    * 哈希表添加数据
    *
-   * @param {"user" | "phone"} keyType
-   * @param {String} key
+   * @param {KeyType} keyType
+   * @param {string} key
    * @param {TelData} value
    * @memberof HashTable
    */
-  put(keyType, key, value) {
+  put(keyType: KeyType, key: string, value: TelProps) {
     let index = this.getHash(key);
-    while (!!this.table[index]) {
-      index = (index + 1) % this.size;
+    while (
+      !!this.table[index] &&
+      (this.table[index] as HashItem).keyType !== keyType &&
+      (this.table[index] as HashItem).key !== key
+    ) {
+      index = (index + 1) % this.limit;
     }
+    !this.table[index] && this.count++;
     this.table[index] = { keyType, key, value };
-    this.count++;
 
-    if (this.count > this.size * 0.75) {
-      const newSize = this.size * 2;
-      const newPrime = generateMaxPrime(newSize);
-      this.prime = newPrime;
-      this.resize(newPrime)
+    if (this.count > this.limit * 0.75) {
+      const newSize = this.limit * 2;
+      this.prime = generateMaxPrime(newSize);
+      this.resize(newSize);
     }
   }
 
   /**
    * 哈希表获取数据
    *
-   * @param {"user" | "phone"} keyType
-   * @param {String} key
+   * @param {KeyType} keyType
+   * @param {string} key
    * @returns
    * @memberof HashTable
    */
-  get(keyType, key) {
+  get(keyType: KeyType, key: string): TelProps | null {
     let index = this.getHash(key);
     while (!!this.table[index]) {
       if (
-        this.table[index].keyType === keyType &&
-        this.table[index].key === key
+        (this.table[index] as HashItem).keyType === keyType &&
+        (this.table[index] as HashItem).key === key
       ) {
-        return this.table[index].value;
+        return (this.table[index] as HashItem).value;
       }
-      index = (index + 1) % this.size;
+      index = (index + 1) % this.limit;
     }
     return null;
   }
@@ -70,41 +75,40 @@ export default class HashMap {
   /**
    * 哈希表删除数据
    *
-   * @param {"user" | "phone"} keyType
-   * @param {String} key
+   * @param {KeyType} keyType
+   * @param {string} key
    * @memberof HashTable
    */
-  remove(keyType, key) {
+  remove(keyType: KeyType, key: string): TelProps | null {
     let index = this.getHash(key);
     while (!!this.table[index]) {
       if (
-        this.table[index].keyType === keyType &&
-        this.table[index].key === key
+        (this.table[index] as HashItem).keyType === keyType &&
+        (this.table[index] as HashItem).key === key
       ) {
-        const res = this.table[index];
+        const res = this.table[index] as HashItem;
         this.table[index] = null;
         this.count--;
 
-        if (this.size > 30 && this.count < this.size * 0.25) {
-          const newSize = Math.floor(this.size / 2);
-          const newPrime = generateMaxPrime(newSize);
-          this.prime = newPrime;
-          this.resize(newPrime)
+        if (this.limit > 10 && this.count < this.limit * 0.25) {
+          const newSize = Math.floor(this.limit / 2);
+          this.prime = generateMaxPrime(newSize);
+          this.resize(newSize);
         }
 
         return res.value;
       }
-      index = (index + 1) % this.size;
+      index = (index + 1) % this.limit;
     }
     return null;
   }
 
-  resize(newSize) {
+  resize(newSize: number) {
     const oldTable = this.table;
 
     this.table = [];
     this.count = 0;
-    this.size = newSize;
+    this.limit = newSize;
 
     for (let i = 0; i < oldTable.length; i++) {
       const data = oldTable[i];
@@ -129,8 +133,8 @@ export default class HashMap {
     this.count = 0;
   }
 
-  getAllData() {
-    const result = [];
+  getAllData(): Array<TableItem> {
+    const result: Array<TableItem> = [];
     this.table.forEach(item => {
       if (item) {
         const { key, keyType, value } = item;
@@ -141,14 +145,14 @@ export default class HashMap {
   }
 }
 
-const generateMaxPrime = max => {
+const generateMaxPrime = (max: number): number => {
   for (let i = max; i >= 2; i--) {
     if (isPrime(i)) return i;
   }
   return 2;
 };
 
-const isPrime = num => {
+const isPrime = (num: number): boolean => {
   if (num <= 1) {
     return false;
   }

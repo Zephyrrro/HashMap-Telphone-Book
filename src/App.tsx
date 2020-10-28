@@ -1,13 +1,5 @@
-import { Component } from "react";
-import {
-  Button,
-  Layout,
-  Menu,
-  Upload,
-  message,
-  Tooltip,
-  Popconfirm
-} from "antd";
+import React, { Component } from "react";
+import { Button, Layout, Menu, Upload, message, Tooltip } from "antd";
 import {
   SearchOutlined,
   PlusOutlined,
@@ -15,6 +7,7 @@ import {
   UploadOutlined
 } from "@ant-design/icons";
 import XLSX from "xlsx";
+import { TableItem } from "./utils/types";
 
 import TelData from "./utils/TelData";
 import Book from "./components/Book";
@@ -29,15 +22,10 @@ import "./css/App.sass";
 const { Header, Content, Footer } = Layout;
 
 export default class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      createModalShow: false,
-      searchModalShow: false
-    };
-  }
-
-  static contextType = HashMapContext;
+  state = {
+    createModalShow: false,
+    searchModalShow: false
+  };
 
   handleCreateModalClose = () => {
     this.setState({ createModalShow: false });
@@ -47,8 +35,8 @@ export default class App extends Component {
     this.setState({ searchModalShow: false });
   };
 
-  handleExport = isMock => {
-    const data = isMock ? mock : this.context.getAllData();
+  handleExport = () => {
+    const data = HashMapContext.getAllData();
     if (!data.length) {
       message.warn("数据为空~");
       return;
@@ -59,32 +47,43 @@ export default class App extends Component {
     XLSX.writeFile(workbook, "export.xlsx");
   };
 
-  handleUpload = e => {
-    const { file } = e;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const fileData = e.target.result;
-      const workbook = XLSX.read(fileData, { type: "binary" });
-      const { SheetNames, Sheets } = workbook;
-      const tableData = XLSX.utils.sheet_to_json(Sheets[SheetNames[0]]);
-
-      this.context.clear();
-      tableData.forEach(item => {
+  handleImport = (e: any, isMock: boolean) => {
+    if (isMock) {
+      HashMapContext.clear();
+      mock.forEach(item => {
         const { keyType, key, ...rest } = item;
         const telData = new TelData(rest);
-        this.context.put(keyType, key, telData);
+        HashMapContext.put(keyType, key, telData);
       });
+    } else {
+      const { file } = e;
+      const reader = new FileReader();
+      reader.onload = (ev: any) => {
+        const fileData = ev.target.result;
+        const workbook = XLSX.read(fileData, { type: "binary" });
+        const { SheetNames, Sheets } = workbook;
+        const tableData: Array<TableItem> = XLSX.utils.sheet_to_json(
+          Sheets[SheetNames[0]]
+        );
 
-      message.success("导入成功~");
-      this.forceUpdate();
-    };
-    reader.readAsBinaryString(file);
+        tableData.forEach(item => {
+          const { keyType, key, ...rest } = item;
+          const telData = new TelData(rest);
+          HashMapContext.put(keyType, key, telData);
+        });
+
+        message.success("导入成功~");
+        this.forceUpdate();
+      };
+      reader.readAsBinaryString(file);
+    }
+    message.success("导入成功~");
+    this.forceUpdate();
   };
 
   render() {
     const { createModalShow, searchModalShow } = this.state;
-
-    const data = this.context.getAllData();
+    const data = HashMapContext.getAllData();
 
     return (
       <Layout className='layout'>
@@ -119,21 +118,17 @@ export default class App extends Component {
               >
                 搜索/删除
               </Button>
-              <Popconfirm
-                title='是否导出mock'
-                onConfirm={() => this.handleExport(false)}
-                onCancel={() => this.handleExport(true)}
-                okText='否'
-                cancelText='是'
+              <Button
+                icon={<SendOutlined />}
+                className='button'
+                onClick={this.handleExport}
               >
-                <Button icon={<SendOutlined />} className='button'>
-                  导出数据
-                </Button>
-              </Popconfirm>
+                导出数据
+              </Button>
 
               <Tooltip title='导入前会清空现有数据'>
                 <Upload
-                  customRequest={this.handleUpload}
+                  customRequest={e => this.handleImport(e, false)}
                   showUploadList={false}
                 >
                   <Button icon={<UploadOutlined />} className='button'>
@@ -141,6 +136,14 @@ export default class App extends Component {
                   </Button>
                 </Upload>
               </Tooltip>
+
+              <Button
+                icon={<UploadOutlined />}
+                className='button'
+                onClick={() => this.handleImport(null, true)}
+              >
+                导入Mock
+              </Button>
             </div>
             <Book data={data} />
           </div>
