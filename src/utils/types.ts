@@ -30,6 +30,7 @@ export interface SearchModalState {
   placeholder: string;
   searchText: string;
   searchResult: Array<TableItem>;
+  searchLength: number;
   popVisible: boolean;
 }
 

@@ -28,6 +28,7 @@ class SearchModal extends Component<ModalProps, SearchModalState> {
       placeholder: "请输入用户名",
       searchText: "",
       searchResult: [],
+      searchLength: 0,
       popVisible: false
     };
   }
@@ -64,11 +65,14 @@ class SearchModal extends Component<ModalProps, SearchModalState> {
   handleSearch = () => {
     this.setState({ searchResult: [] }, () => {
       const { searchText, keyType } = this.state;
-      const res = HashMapContext.get(keyType, searchText);
-      if (!res) {
+      const { value, searchLength } = HashMapContext.get(keyType, searchText);
+      this.setState({ searchLength });
+      if (!value) {
         message.error("查无此项");
       } else {
-        this.setState({ searchResult: [{ keyType, key: searchText, ...res }] });
+        this.setState({
+          searchResult: [{ keyType, key: searchText, ...value }]
+        });
       }
     });
   };
@@ -83,7 +87,13 @@ class SearchModal extends Component<ModalProps, SearchModalState> {
   };
 
   render() {
-    const { keyType, placeholder, searchText, searchResult } = this.state;
+    const {
+      keyType,
+      placeholder,
+      searchText,
+      searchResult,
+      searchLength
+    } = this.state;
     const { visible } = this.props;
     const columns = [
       {
@@ -156,7 +166,7 @@ class SearchModal extends Component<ModalProps, SearchModalState> {
               onClick={this.handleSearch}
             />
           </div>
-          <Divider>搜索结果</Divider>
+          <Divider>搜索长度：{searchLength}</Divider>
           <Table
             columns={columns}
             dataSource={searchResult}
