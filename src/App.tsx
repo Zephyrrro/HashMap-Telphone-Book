@@ -15,7 +15,7 @@ import CreateModal from "./components/CreateModal";
 import SearchModal from "./components/SearchModal";
 import HashMapContext from "./store/context";
 
-import { mock } from "./mock";
+import { getMockData } from "./mock";
 
 import "./css/App.sass";
 
@@ -24,7 +24,8 @@ const { Header, Content, Footer } = Layout;
 export default class App extends Component {
   state = {
     createModalShow: false,
-    searchModalShow: false
+    searchModalShow: false,
+    isImporting: false
   };
 
   handleCreateModalClose = () => {
@@ -47,14 +48,22 @@ export default class App extends Component {
     XLSX.writeFile(workbook, "export.xlsx");
   };
 
-  handleImport = (e: any, isMock: boolean) => {
+  handleImport = async (e: any, isMock: boolean) => {
+    HashMapContext.clear();
+
     if (isMock) {
-      HashMapContext.clear();
-      mock.forEach(item => {
+      this.setState({ isImporting: true });
+
+      const mockData = await getMockData();
+      mockData.forEach(item => {
         const { keyType, key, ...rest } = item;
         const telData = new TelData(rest);
         HashMapContext.put(keyType, key, telData);
       });
+
+      this.setState({ isImporting: false });
+      message.success("导入成功~");
+      this.forceUpdate();
     } else {
       const { file } = e;
       const reader = new FileReader();
@@ -77,12 +86,10 @@ export default class App extends Component {
       };
       reader.readAsBinaryString(file);
     }
-    message.success("导入成功~");
-    this.forceUpdate();
   };
 
   render() {
-    const { createModalShow, searchModalShow } = this.state;
+    const { createModalShow, searchModalShow, isImporting } = this.state;
     const data = HashMapContext.getAllData();
 
     return (
@@ -130,6 +137,7 @@ export default class App extends Component {
                 <Upload
                   customRequest={e => this.handleImport(e, false)}
                   showUploadList={false}
+                  accept=".xlsx, .xls"
                 >
                   <Button icon={<UploadOutlined />} className='button'>
                     导入数据
@@ -141,6 +149,8 @@ export default class App extends Component {
                 icon={<UploadOutlined />}
                 className='button'
                 onClick={() => this.handleImport(null, true)}
+                loading={isImporting}
+                disabled={isImporting}
               >
                 导入Mock
               </Button>
