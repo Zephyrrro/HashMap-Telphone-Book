@@ -10,7 +10,7 @@ import {
   Popconfirm
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
-import HashMapContext from "../store/context";
+import { TelHashMap } from "../store/global";
 import {
   ModalProps,
   KeyType,
@@ -39,6 +39,7 @@ class SearchModal extends Component<ModalProps, SearchModalState> {
       placeholder: "请输入用户名",
       searchText: "",
       searchResult: [],
+      searchLength: 0,
       popVisible: false
     });
   };
@@ -65,7 +66,7 @@ class SearchModal extends Component<ModalProps, SearchModalState> {
   handleSearch = () => {
     this.setState({ searchResult: [] }, () => {
       const { searchText, keyType } = this.state;
-      const { value, searchLength } = HashMapContext.get(keyType, searchText);
+      const { value, searchLength } = TelHashMap.get(keyType, searchText.trim());
       this.setState({ searchLength });
       if (!value) {
         message.error("查无此项");
@@ -78,7 +79,7 @@ class SearchModal extends Component<ModalProps, SearchModalState> {
   };
 
   handleDelete = (item: TableItem) => {
-    if (HashMapContext.remove(item.keyType, item.key)) {
+    if (TelHashMap.remove(item.keyType, item.key)) {
       message.success("删除成功~");
       this.handleCancel();
     } else {

@@ -13,7 +13,8 @@ import TelData from "./utils/TelData";
 import Book from "./components/Book";
 import CreateModal from "./components/CreateModal";
 import SearchModal from "./components/SearchModal";
-import HashMapContext from "./store/context";
+import { TelHashMap } from "./store/global";
+// import TableContext from "./store/context"
 
 import { getMockData } from "./mock";
 
@@ -25,19 +26,20 @@ export default class App extends Component {
   state = {
     createModalShow: false,
     searchModalShow: false,
-    isImporting: false
+    isImporting: false,
+    data: TelHashMap.getAllData()
   };
 
   handleCreateModalClose = () => {
-    this.setState({ createModalShow: false });
+    this.setState({ data: TelHashMap.getAllData(), createModalShow: false });
   };
 
   handleSearchModalClose = () => {
-    this.setState({ searchModalShow: false });
+    this.setState({ data: TelHashMap.getAllData(), searchModalShow: false });
   };
 
   handleExport = () => {
-    const data = HashMapContext.getAllData();
+    const { data } = this.state;
     if (!data.length) {
       message.warn("数据为空~");
       return;
@@ -49,21 +51,15 @@ export default class App extends Component {
   };
 
   handleImport = async (e: any, isMock: boolean) => {
-    HashMapContext.clear();
+    TelHashMap.clear();
+    this.setState({ data: [] });
 
     if (isMock) {
       this.setState({ isImporting: true });
 
       const mockData = await getMockData();
-      mockData.forEach(item => {
-        const { keyType, key, ...rest } = item;
-        const telData = new TelData(rest);
-        HashMapContext.put(keyType, key, telData);
-      });
-
-      this.setState({ isImporting: false });
+      this.setState({ data: this.setupHashMap(mockData), isImporting: false });
       message.success("导入成功~");
-      this.forceUpdate();
     } else {
       const { file } = e;
       const reader = new FileReader();
@@ -74,23 +70,25 @@ export default class App extends Component {
         const tableData: Array<TableItem> = XLSX.utils.sheet_to_json(
           Sheets[SheetNames[0]]
         );
-
-        tableData.forEach(item => {
-          const { keyType, key, ...rest } = item;
-          const telData = new TelData(rest);
-          HashMapContext.put(keyType, key, telData);
-        });
-
+        this.setState({ data: this.setupHashMap(tableData) });
         message.success("导入成功~");
-        this.forceUpdate();
       };
       reader.readAsBinaryString(file);
     }
   };
 
+  setupHashMap = (data: Array<TableItem>) => {
+    data.forEach(item => {
+      const { keyType, key, ...rest } = item;
+      const telData = new TelData(rest);
+      TelHashMap.put(keyType, key, telData);
+    });
+
+    return TelHashMap.getAllData();
+  };
+
   render() {
-    const { createModalShow, searchModalShow, isImporting } = this.state;
-    const data = HashMapContext.getAllData();
+    const { data, createModalShow, searchModalShow, isImporting } = this.state;
 
     return (
       <Layout className='layout'>
@@ -137,7 +135,7 @@ export default class App extends Component {
                 <Upload
                   customRequest={e => this.handleImport(e, false)}
                   showUploadList={false}
-                  accept=".xlsx, .xls"
+                  accept='.xlsx, .xls'
                 >
                   <Button icon={<UploadOutlined />} className='button'>
                     导入数据

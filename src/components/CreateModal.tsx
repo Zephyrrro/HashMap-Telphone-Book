@@ -1,7 +1,7 @@
 import React, { Component, CSSProperties } from "react";
 import { Modal, Radio, Input, Tooltip, message } from "antd";
 import TelData from "../utils/TelData";
-import HashMapContext from "../store/context";
+import { TelHashMap } from "../store/global";
 import { ModalProps, KeyType, CreateModalState } from "../utils/types";
 import { RadioChangeEvent } from "antd/lib/radio";
 
@@ -22,8 +22,12 @@ class CreateModal extends Component<ModalProps, CreateModalState> {
 
   handleOk = () => {
     const { keyType, user, phone, address } = this.state;
-    const newItem = new TelData({ phone, user, address });
-    HashMapContext.put(keyType, newItem[keyType], newItem);
+    const newItem = new TelData({
+      phone: phone.trim(),
+      user: user.trim(),
+      address: address.trim()
+    });
+    TelHashMap.put(keyType, newItem[keyType], newItem);
     message.success("添加成功~");
 
     this.handleCancel();

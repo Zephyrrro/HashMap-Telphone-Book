@@ -138,7 +138,7 @@ export default class HashMap {
    * @memberof HashMap
    */
   resize(newSize: number) {
-    const oldTable = this.table;  //  保存旧表
+    const oldTable = this.table; //  保存旧表
 
     //  重新初始化
     this.table = [];
